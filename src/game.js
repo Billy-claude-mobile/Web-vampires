@@ -18,6 +18,13 @@ const SPAWN_HINTS = {
   inquisitor: '✝️ Inquisiteur ! Ne le touche qu\'en frénésie',
 };
 
+/** Part du sang d'une morsure rendue selon la source de la victime. */
+const BLOOD_FACTOR = {
+  bite: () => 1,
+  bat: () => CONFIG.bats.bloodFactor,
+  nova: () => CONFIG.nova.bloodFactor,
+};
+
 /** États possibles de la partie. */
 export const State = Object.freeze({
   MENU: 'menu',
@@ -344,7 +351,7 @@ export class Game {
   #kill(h, source) {
     const p = this.player;
     h.dead = true;
-    const factor = source === 'bite' ? 1 : CONFIG.bats.bloodFactor;
+    const factor = BLOOD_FACTOR[source]();
     const gain = h.cfg.blood * p.stats.bloodGain * factor;
     p.addBlood(gain);
 

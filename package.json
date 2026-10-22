@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "http-server -p 8080 -c-1 .",
-    "test": "node tests/smoke.mjs && node tests/balance.mjs",
+    "test": "node tests/smoke.mjs && node tests/powers.mjs && node tests/balance.mjs",
     "lint": "eslint src tests"
   },
   "devDependencies": {
