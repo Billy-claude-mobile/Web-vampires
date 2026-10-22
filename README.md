@@ -12,6 +12,7 @@ Jeu d'arcade 2D pour mobile (et desktop) sur le thème des vampires. Aucune dép
 - **Frénésie** : 8 morsures enchaînées rendent invincible, plus rapide et sans perte de sang pendant quelques secondes.
 - **Montée de niveau** : choisis 1 pouvoir parmi 3 (nuée de chauves-souris, onde sanguine, vitesse, crocs…).
 - **Boss** ☠️ (à 1 min 10, puis toutes les ~1 min 35) : le Grand Chasseur (salves en éventail, charges) et le Grand Inquisiteur (cercles sacrés, renforts). Mords-les entre deux attaques. Chaque victoire rapporte du sang, du score et un pouvoir.
+- **Progression après les boss** : le 1er boss vaincu fait arriver les **limiers** 🐺 (bond annoncé par une zone rouge), le 2e les **herboristes** 🧄 (fioles d'ail : nuage qui ralentit et brûle). Chaque boss suivant augmente la **Menace** ⚠️ : humains plus rapides, plus nombreux, tirant plus souvent et frappant plus fort.
 - **La Crypte** 🏛️ : chaque partie rapporte des âmes 👻 à dépenser en améliorations permanentes (sang max, vitesse, XP, relances, familier, résurrection…).
 - **Musique d'ambiance** générée en direct, plus intense pendant les boss et la frénésie.
 - Les combos multiplient le score. Le record, les âmes et les achats sont sauvegardés localement.
@@ -39,7 +40,8 @@ src/meta.js                Progression permanente : âmes et Crypte (META_UPGRAD
 src/music.js               Musique générative (séquenceur Web Audio)
 src/input.js               Joystick tactile et clavier
 src/fx.js / audio.js       Particules et sons synthétisés (Web Audio, aucun fichier)
-src/entities/              Joueur, humains, carreaux, boss (bosses.js : ajouter un boss = une classe + BOSS_TYPES)
+src/entities/              Joueur, humains, carreaux, boss (bosses.js : ajouter un boss = une classe + BOSS_TYPES),
+                           ennemis débloqués (elite.js : limier, herboriste, nuage d'ail)
 tests/                     Tests Playwright : parcours complet, équilibrage par bot, formats d'écran
 ```
 
@@ -48,7 +50,7 @@ tests/                     Tests Playwright : parcours complet, équilibrage par
 Avec le serveur lancé (`npm start`) :
 
 ```bash
-npm test                    # parcours complet, effet de chaque pouvoir, équilibrage par bot
+npm test                    # parcours complet, pouvoirs, progression après les boss, équilibrage par bot
 node tests/balance.mjs <url> 10 --meta    # équilibrage avec la moitié de la Crypte achetée
 node tests/sizes.mjs        # captures sur iPhone SE, Pixel 7 et desktop
 ```

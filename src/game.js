@@ -2,6 +2,7 @@ import { CONFIG } from './config.js';
 import { Player } from './entities/player.js';
 import { Bolt, Hunter, Inquisitor, Villager } from './entities/humans.js';
 import { BOSS_TYPES, HolyZone } from './entities/bosses.js';
+import { GarlicCloud, Herbalist, Hound } from './entities/elite.js';
 import { Fx } from './fx.js';
 import { meta, soulsForRun } from './meta.js';
 import { UPGRADES, rollUpgrades } from './upgrades.js';
@@ -11,11 +12,15 @@ const SPAWNERS = {
   villager: (x, y) => new Villager(x, y),
   hunter: (x, y) => new Hunter(x, y),
   inquisitor: (x, y, t) => new Inquisitor(x, y, t),
+  hound: (x, y) => new Hound(x, y),
+  herbalist: (x, y) => new Herbalist(x, y),
 };
 
 const SPAWN_HINTS = {
   hunter: '🏹 Chasseur ! Évite sa ligne rouge',
   inquisitor: '✝️ Inquisiteur ! Ne le touche qu\'en frénésie',
+  hound: '🐺 Nouveaux ennemis : les limiers ! Esquive leur bond (zone rouge)',
+  herbalist: '🧄 Nouveaux ennemis : les herboristes ! Fuis les nuages d\'ail',
 };
 
 /** Part du sang d'une morsure rendue selon la source de la victime. */
@@ -52,6 +57,9 @@ export class Game {
     this.humans = [];
     this.bolts = [];
     this.zones = [];
+    this.hazards = [];
+    this.unlocked = {}; // type d'ennemi → instant de son déblocage
+    this.threatLevel = 0;
     this.boss = null;
     this.bossesSpawned = 0;
     this.bossesKilled = 0;
@@ -115,6 +123,13 @@ export class Game {
     return Math.min(1 + Math.floor(this.combo / 4), CONFIG.bite.maxMultiplier);
   }
 
+  /** Bonus des humains hostiles selon le niveau de Menace. */
+  get threat() {
+    const per = CONFIG.progression.threatPerLevel;
+    const l = this.threatLevel;
+    return { speed: 1 + per.speed * l, damage: 1 + per.damage * l, fireRate: 1 + per.fireRate * l, spawn: 1 + per.spawn * l };
+  }
+
   /** Âmes accumulées jusqu'ici dans la partie (créditées à la fin). */
   get souls() {
     return soulsForRun(this, this.run.soulGain);
@@ -149,9 +164,12 @@ export class Game {
     for (const h of this.humans) h.update(dt, this);
     for (const b of this.bolts) b.update(dt);
     for (const z of this.zones) z.update(dt);
+    for (const h of this.hazards) h.update(dt);
 
     this.#updateBoss(dt);
     this.#resolveZones();
+    this.#resolveHazards(dt);
+    if (this.state === State.OVER) return;
     this.#resolveBites();
     this.#resolveBats();
     this.#resolveNova(dt);
@@ -177,7 +195,13 @@ export class Game {
     for (const h of this.humans) {
       if (h.dead) continue;
       const d = dist(p, h);
-      if (h.canBeBitten(p)) {
+      if (h.dangerous && !p.inFrenzy) {
+        // Limier en plein bond : c'est lui qui mord.
+        if (d <= p.radius + h.radius) {
+          this.#hurt(h.cfg.damage, 'Mis en pièces par un limier');
+          h.endLunge();
+        }
+      } else if (h.canBeBitten(p)) {
         if (d <= p.biteRadius + h.radius) this.#kill(h, 'bite');
       } else if (d <= p.radius + h.radius) {
         // Contact avec un inquisiteur : dégâts + repousse. Seul le corps compte, pas la portée des crocs.
@@ -231,6 +255,21 @@ export class Game {
         this.#kill(h, 'nova');
       }
     }
+  }
+
+  throwGarlic(fromX, fromY, x, y) {
+    this.hazards.push(new GarlicCloud(fromX, fromY, x, y));
+  }
+
+  /** Nuages d'ail : ralentissent et brûlent le joueur tant qu'il est dedans (sauf en frénésie). */
+  #resolveHazards(dt) {
+    const p = this.player;
+    const inside = !p.inFrenzy && this.hazards.some((h) => h.contains(p));
+    const cloud = CONFIG.herbalist.cloud;
+    p.slowMult = inside ? cloud.slow : 1;
+    if (!inside) return;
+    p.blood -= cloud.dps * this.threat.damage * p.stats.armor * dt;
+    if (p.blood <= 0) this.#die('Asphyxié par l\'ail');
   }
 
   /** Repousse un humain loin du joueur et l'étourdit. */
@@ -335,6 +374,20 @@ export class Game {
     this.fx.text(b.x, b.y - 70, 'BOSS VAINCU !', '#ffd34d', 28);
     this.fx.shake(12, 0.5);
     this.audio.bossDown();
+    this.#advanceProgression();
+  }
+
+  /** Après un boss : nouvel ennemi pour les premiers, sinon un niveau de Menace en plus. */
+  #advanceProgression() {
+    const unlock = CONFIG.progression.unlocks[this.bossesKilled - 1];
+    if (unlock) {
+      this.unlocked[unlock] = this.elapsed;
+      this.seen[unlock] = true;
+      this.ui.flashHint(SPAWN_HINTS[unlock], 4.5);
+    } else {
+      this.threatLevel += 1;
+      this.ui.flashHint(`⚠️ Menace ${this.threatLevel} : les humains se renforcent !`, 4);
+    }
   }
 
   addHolyZone(x, y) {
@@ -402,7 +455,7 @@ export class Game {
   #hurt(amount, cause) {
     const p = this.player;
     if (p.invuln > 0 || p.inFrenzy) return;
-    const dmg = amount * p.stats.armor;
+    const dmg = amount * p.stats.armor * this.threat.damage;
     p.blood -= dmg;
     p.invuln = CONFIG.player.invulnTime;
     p.hurtFlash = 0.2;
@@ -436,6 +489,7 @@ export class Game {
     p.invuln = 2.5;
     this.bolts.length = 0;
     this.zones.length = 0;
+    this.hazards.length = 0;
     for (const h of this.humans) {
       if (h.kind !== 'villager' && dist(h, p) < 220) h.dead = true;
     }
@@ -533,15 +587,18 @@ export class Game {
   }
 
   #spawn() {
-    const count = { villager: 0, hunter: 0, inquisitor: 0 };
-    for (const h of this.humans) count[h.kind] += 1;
+    const count = {};
+    for (const h of this.humans) count[h.kind] = (count[h.kind] ?? 0) + 1;
     // Pendant un combat de boss, moins de renforts hostiles.
     const pressure = this.boss ? 0.34 : 1;
 
     for (const [kind, rule] of Object.entries(CONFIG.spawn)) {
+      if (rule.unlock && !(kind in this.unlocked)) continue;
       this.spawnCooldowns[kind] = (this.spawnCooldowns[kind] ?? 0) - this.lastDt;
-      const target = rule.target(this.elapsed) * (kind === 'villager' ? 1 : pressure);
-      if (count[kind] >= Math.floor(target) || this.spawnCooldowns[kind] > 0) continue;
+      const t = rule.unlock ? this.elapsed - this.unlocked[kind] : this.elapsed;
+      const hostile = kind !== 'villager';
+      const target = rule.target(t) * (hostile ? pressure * this.threat.spawn : 1);
+      if ((count[kind] ?? 0) >= Math.floor(target) || this.spawnCooldowns[kind] > 0) continue;
       this.spawnCooldowns[kind] = rule.interval;
       const { x, y } = this.#spawnPoint();
       this.humans.push(SPAWNERS[kind](x, y, this.elapsed));
@@ -560,5 +617,6 @@ export class Game {
     this.humans = this.humans.filter((h) => !h.dead);
     this.bolts = this.bolts.filter((b) => !b.dead);
     this.zones = this.zones.filter((z) => !z.dead);
+    this.hazards = this.hazards.filter((h) => !h.dead);
   }
 }

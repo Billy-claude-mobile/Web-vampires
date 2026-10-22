@@ -25,6 +25,8 @@ export class UI {
       bossName: $('boss-name'),
       bossFill: $('boss-fill'),
       souls: $('hud-souls'),
+      threat: $('hud-threat'),
+      threatLevel: $('hud-threat-level'),
       soulsCount: $('hud-souls-count'),
     };
     this.lastCombo = 0;
@@ -180,6 +182,9 @@ export class UI {
     el.xpFill.style.transform = `scaleX(${game.xp / game.xpNeeded})`;
     el.level.textContent = `Niv. ${game.level}`;
     el.score.textContent = game.score;
+
+    el.threat.classList.toggle('hidden', game.threatLevel === 0);
+    el.threatLevel.textContent = game.threatLevel;
 
     const souls = game.souls;
     if (souls !== this.lastSouls) {

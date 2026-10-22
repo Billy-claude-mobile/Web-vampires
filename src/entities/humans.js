@@ -7,7 +7,7 @@ const HAIRS = ['#3b2414', '#d9b25a', '#6b3a1e', '#2a2a2a', '#a0522d'];
 const SKINS = ['#f0c8a0', '#d9a77c', '#b07a52', '#f5d6b8'];
 
 /** Classe commune aux proies : morsables, rapportent du sang, de l'XP et du score. */
-class Human extends Entity {
+export class Human extends Entity {
   constructor(x, y, cfg) {
     super(x, y, cfg.radius);
     this.cfg = cfg;
@@ -94,7 +94,7 @@ export class Hunter extends Human {
       this.facing = Math.cos(this.aimAngle) >= 0 ? 1 : -1;
       if (this.aiming <= 0) {
         game.spawnBolt(this.x, this.y - this.radius, this.aimAngle);
-        this.reload = rand(cfg.reloadMin, cfg.reloadMax);
+        this.reload = rand(cfg.reloadMin, cfg.reloadMax) / game.threat.fireRate;
       }
       return;
     }
@@ -117,7 +117,8 @@ export class Hunter extends Human {
       mx = -to.y * this.strafe * 0.6;
       my = to.x * this.strafe * 0.6;
     }
-    this.move(mx * cfg.speed, my * cfg.speed, dt);
+    const speed = cfg.speed * game.threat.speed;
+    this.move(mx * speed, my * speed, dt);
 
     this.reload -= dt;
     // Ne tire que s'il est visible à l'écran : chaque tir doit être esquivable.
@@ -188,7 +189,8 @@ export class Inquisitor extends Human {
     const to = dirTo(this, p);
     // En frénésie, les inquisiteurs prennent peur et fuient.
     const sign = p.inFrenzy ? -0.7 : 1;
-    this.move(to.x * this.speed * sign, to.y * this.speed * sign, dt);
+    const speed = this.speed * game.threat.speed * sign;
+    this.move(to.x * speed, to.y * speed, dt);
   }
 
   draw(ctx, time) {

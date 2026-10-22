@@ -46,6 +46,22 @@ const { out: results, lines } = await page.evaluate(async ({ runs, trace }) => {
         fy += ax * side * 6;
       }
     }
+    // Limiers qui vont bondir : on s'écarte perpendiculairement
+    for (const h of game.humans) {
+      if (h.kind !== 'hound' || !(h.state === 'crouch' || h.state === 'lunge') || skill < 0.5) continue;
+      const ax = Math.cos(h.lungeAngle);
+      const ay = Math.sin(h.lungeAngle);
+      const side = Math.sign(ax * (p.y - h.y) - ay * (p.x - h.x)) || 1;
+      fx += -ay * side * 6;
+      fy += ax * side * 6;
+    }
+    // Nuages d'ail (et impacts annoncés) à éviter
+    for (const z of game.hazards) {
+      const dx = z.x - p.x;
+      const dy = z.y - p.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d < z.radius + 25 && skill > 0.5) { fx -= (dx / d) * 6; fy -= (dy / d) * 6; }
+    }
     // Cercles sacrés à éviter
     for (const z of game.zones) {
       const dx = z.x - p.x;
@@ -107,6 +123,7 @@ const { out: results, lines } = await page.evaluate(async ({ runs, trace }) => {
       victimes: game.kills,
       niveau: game.level,
       boss: `${game.bossesKilled}/${game.bossesSpawned}`,
+      menace: game.threatLevel,
       âmes: game.soulsEarned,
       comboMax: game.bestCombo,
       cause: game.deathCause,
