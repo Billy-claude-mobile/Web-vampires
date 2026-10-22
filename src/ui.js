@@ -1,10 +1,11 @@
 import { CONFIG } from './config.js';
 import { formatTime } from './utils.js';
 import { storage } from './storage.js';
+import { META_UPGRADES, meta } from './meta.js';
 
 const $ = (id) => document.getElementById(id);
 
-const SCREENS = ['menu', 'levelup', 'pause', 'gameover'];
+const SCREENS = ['menu', 'levelup', 'pause', 'gameover', 'shop'];
 const TOUCH = window.matchMedia('(pointer: coarse)').matches;
 
 /** Interface DOM : HUD, menus, choix d'améliorations, écran de fin. */
@@ -20,6 +21,9 @@ export class UI {
       combo: $('combo'),
       hint: $('hint'),
       cards: $('cards'),
+      bossBar: $('boss-bar'),
+      bossName: $('boss-name'),
+      bossFill: $('boss-fill'),
     };
     this.lastCombo = 0;
     this.hintTimer = 0;
@@ -34,15 +38,21 @@ export class UI {
     $('resume-btn').addEventListener('click', actions.resume);
     $('quit-btn').addEventListener('click', actions.quit);
     $('mute-btn').addEventListener('click', actions.toggleMute);
+    $('crypt-btn').addEventListener('click', () => this.showShop('menu'));
+    $('go-crypt-btn').addEventListener('click', () => this.showShop('gameover'));
+    $('shop-back').addEventListener('click', () => (this.shopReturn === 'menu' ? this.showMenu() : this.#show('gameover')));
+    $('reroll-btn').addEventListener('click', () => this.onReroll?.());
+    this.onBuy = actions.buy;
   }
 
   #show(name) {
     for (const s of SCREENS) $(s).classList.toggle('hidden', s !== name);
-    this.el.hud.classList.toggle('hidden', name === 'menu' || name === 'gameover');
+    this.el.hud.classList.toggle('hidden', ['menu', 'gameover', 'shop'].includes(name));
   }
 
   showMenu() {
     $('menu-best').textContent = storage.load().best ?? 0;
+    $('menu-souls').textContent = meta.souls;
     this.#show('menu');
   }
 
@@ -65,7 +75,46 @@ export class UI {
     $('mute-btn').textContent = muted ? '🔇' : '🔊';
   }
 
-  showLevelUp(choices, levels, onPick) {
+  /** Crypte : achat des améliorations permanentes. */
+  showShop(returnTo) {
+    this.shopReturn = returnTo;
+    this.#renderShop();
+    this.#show('shop');
+  }
+
+  #renderShop() {
+    const souls = meta.souls;
+    $('shop-souls').textContent = souls;
+    const list = $('shop-list');
+    list.innerHTML = '';
+    for (const u of META_UPGRADES) {
+      const lvl = meta.level(u.id);
+      const price = meta.price(u);
+      const item = document.createElement('div');
+      item.className = 'card';
+      item.innerHTML = `
+        <span class="card-icon">${u.icon}</span>
+        <span>
+          <span class="card-name">${u.name}</span>
+          <div class="card-desc">${u.desc}</div>
+          <div class="pips">${'◆'.repeat(lvl)}${'◇'.repeat(u.max - lvl)}</div>
+        </span>`;
+      const btn = document.createElement('button');
+      btn.className = `price-btn${price === null ? ' maxed' : ''}`;
+      btn.textContent = price === null ? 'MAX' : `👻 ${price}`;
+      btn.disabled = price === null || souls < price;
+      btn.addEventListener('click', () => {
+        if (meta.buy(u.id)) {
+          this.onBuy?.();
+          this.#renderShop();
+        }
+      });
+      item.appendChild(btn);
+      list.appendChild(item);
+    }
+  }
+
+  showLevelUp(choices, levels, { onPick, rerolls, onReroll }) {
     const { cards } = this.el;
     cards.innerHTML = '';
     // Verrou court : évite qu'un doigt encore posé valide une carte par erreur.
@@ -85,6 +134,9 @@ export class UI {
       btn.addEventListener('click', () => onPick(u.id), { once: true });
       cards.appendChild(btn);
     }
+    this.onReroll = onReroll;
+    $('reroll-btn').classList.toggle('hidden', rerolls <= 0);
+    $('reroll-count').textContent = rerolls;
     this.#show('levelup');
   }
 
@@ -100,6 +152,8 @@ export class UI {
     $('go-time').textContent = formatTime(game.elapsed);
     $('go-kills').textContent = game.kills;
     $('go-best').textContent = isRecord ? '🏆 Record battu !' : `Record : ${best}`;
+    $('go-souls').textContent = game.soulsEarned;
+    this.el.bossBar.classList.add('hidden');
 
     // Laisse voir la mort une demi-seconde avant l'écran de fin.
     setTimeout(() => this.#show('gameover'), 600);
@@ -121,6 +175,13 @@ export class UI {
     el.xpFill.style.transform = `scaleX(${game.xp / game.xpNeeded})`;
     el.level.textContent = `Niv. ${game.level}`;
     el.score.textContent = game.score;
+
+    const boss = game.boss;
+    el.bossBar.classList.toggle('hidden', !boss);
+    if (boss) {
+      el.bossName.textContent = `☠️ ${boss.name}`;
+      el.bossFill.style.transform = `scaleX(${Math.max(0, boss.hp / boss.maxHp)})`;
+    }
 
     // Combo
     const frenzy = p.inFrenzy;

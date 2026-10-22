@@ -27,6 +27,10 @@
       <div class="xp-bar"><div id="xp-fill"></div><span id="level">Niv. 1</span></div>
       <div id="score">0</div>
     </div>
+    <div id="boss-bar" class="boss-bar hidden">
+      <span id="boss-name"></span>
+      <div class="boss-hp"><div id="boss-fill"></div></div>
+    </div>
     <div id="combo" class="combo"></div>
     <div id="hint" class="hint"></div>
   </div>
@@ -40,8 +44,10 @@
       <li><span class="rule-icon">🩸</span><span>Ta jauge se vide sans cesse : <b>à 0, tu meurs</b></span></li>
       <li><span class="rule-icon">🏹</span><span>Esquive les carreaux des chasseurs (ligne rouge)</span></li>
       <li><span class="rule-icon">✝️</span><span>Fuis les inquisiteurs dorés… sauf en <b>frénésie</b></span></li>
+      <li><span class="rule-icon">☠️</span><span>Boss : <b>mords-le</b> entre ses attaques</span></li>
     </ul>
     <button id="play-btn" class="big-btn">Jouer</button>
+    <button id="crypt-btn" class="secondary-btn">🏛️ La Crypte <span class="souls">👻 <span id="menu-souls">0</span></span></button>
     <p class="best">Record : <span id="menu-best">0</span></p>
     <button id="mute-btn" class="icon-btn mute" aria-label="Son">🔊</button>
   </section>
@@ -51,6 +57,16 @@
     <h2>Niveau supérieur !</h2>
     <p class="sub">Choisis un pouvoir</p>
     <div id="cards" class="cards"></div>
+    <button id="reroll-btn" class="secondary-btn hidden">🎲 Relancer (<span id="reroll-count">0</span>)</button>
+  </section>
+
+  <!-- Crypte : progression permanente -->
+  <section id="shop" class="screen hidden">
+    <h2>La Crypte</h2>
+    <p class="sub">Dépense tes âmes en pouvoirs permanents</p>
+    <p class="souls big">👻 <span id="shop-souls">0</span></p>
+    <div id="shop-list" class="cards shop-list"></div>
+    <button id="shop-back" class="big-btn">Retour</button>
   </section>
 
   <!-- Pause -->
@@ -70,7 +86,9 @@
       <div><span id="go-kills">0</span><small>victimes</small></div>
     </div>
     <p id="go-best" class="best"></p>
+    <p class="souls">+<span id="go-souls">0</span> 👻 âmes</p>
     <button id="retry-btn" class="big-btn">Rejouer</button>
+    <button id="go-crypt-btn" class="secondary-btn">🏛️ La Crypte</button>
   </section>
 
   <script type="module" src="src/main.js"></script>

@@ -56,10 +56,14 @@ export class Renderer {
 
     this.#drawGround(game, time);
 
+    for (const z of game.zones) z.draw(ctx);
     for (const h of game.humans) h.drawAim?.(ctx);
+    game.boss?.drawTelegraph(ctx, time);
 
     // Tri par profondeur (y) pour un rendu cohérent.
-    const actors = [...game.humans, game.player].sort((a, b) => a.y - b.y);
+    const actors = [...game.humans, game.player];
+    if (game.boss) actors.push(game.boss);
+    actors.sort((a, b) => a.y - b.y);
     for (const a of actors) a.draw(ctx, time);
 
     game.player.drawBats(ctx, time);
@@ -69,6 +73,7 @@ export class Renderer {
 
     // ---- Espace écran
     this.#drawOverlays(game, time);
+    this.#drawBossPointer(game, time);
     this.#drawJoystick(game.input);
   }
 
@@ -201,6 +206,32 @@ export class Renderer {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, this.width, this.height);
     }
+  }
+
+  /** Flèche en bord d'écran indiquant un boss hors champ. */
+  #drawBossPointer(game, time) {
+    const b = game.boss;
+    if (!b || game.isOnScreen(b, 0)) return;
+    const { ctx } = this;
+    const a = Math.atan2(b.y - game.camera.y, b.x - game.camera.x);
+    const margin = 36;
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    const k = Math.min((cx - margin) / Math.abs(Math.cos(a) || 1e-6), (cy - margin) / Math.abs(Math.sin(a) || 1e-6));
+    ctx.save();
+    ctx.translate(cx + Math.cos(a) * k, cy + Math.sin(a) * k);
+    ctx.rotate(a);
+    ctx.globalAlpha = 0.7 + Math.sin(time * 8) * 0.3;
+    ctx.fillStyle = '#f2c14e';
+    ctx.beginPath();
+    ctx.moveTo(16, 0);
+    ctx.lineTo(-10, -12);
+    ctx.lineTo(-4, 0);
+    ctx.lineTo(-10, 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   #drawJoystick(input) {

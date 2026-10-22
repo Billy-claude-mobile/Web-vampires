@@ -19,6 +19,11 @@ export class Audio {
       this.master.connect(this.ctx.destination);
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
+    this.onUnlock?.(this.ctx, this.master);
+  }
+
+  suspend() {
+    this.ctx?.suspend();
   }
 
   setMuted(muted) {
@@ -89,6 +94,24 @@ export class Audio {
 
   frenzy() {
     [220, 277, 330, 440].forEach((f, i) => this.#tone({ freq: f, to: f * 2, type: 'sawtooth', duration: 0.25, volume: 0.08, delay: i * 0.05 }));
+  }
+
+  bossWarning() {
+    [0, 0.45, 0.9].forEach((delay) => this.#tone({ freq: 98, to: 92, type: 'sine', duration: 0.8, volume: 0.35, delay }));
+    [0, 0.45, 0.9].forEach((delay) => this.#tone({ freq: 196, to: 190, type: 'triangle', duration: 0.6, volume: 0.1, delay }));
+  }
+
+  bossDown() {
+    this.#noise({ duration: 0.6, volume: 0.35, filter: 800 });
+    [392, 523, 659, 784, 1046].forEach((f, i) => this.#tone({ freq: f, type: 'triangle', duration: 0.3, volume: 0.15, delay: 0.1 + i * 0.08 }));
+  }
+
+  revive() {
+    [262, 330, 392, 523].forEach((f, i) => this.#tone({ freq: f, to: f * 1.01, type: 'sine', duration: 0.5, volume: 0.15, delay: i * 0.1 }));
+  }
+
+  buy() {
+    this.#tone({ freq: 660, to: 990, type: 'triangle', duration: 0.15, volume: 0.15 });
   }
 
   death() {

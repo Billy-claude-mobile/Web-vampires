@@ -304,11 +304,81 @@ h2 {
 @keyframes pulse { from { border-color: #4a1622; } to { border-color: var(--blood-light); box-shadow: 0 0 14px var(--blood); } }
 @keyframes float { from { transform: translateY(0); } to { transform: translateY(-8px); } }
 
+/* Boss */
+.boss-bar {
+  max-width: 420px;
+  margin: 12px auto 0;
+  text-align: center;
+}
+#boss-name {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 2px 4px #000;
+}
+.boss-hp {
+  position: relative;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid #6b5420;
+  overflow: hidden;
+}
+#boss-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #b8860b, var(--gold));
+  transition: transform 0.15s;
+}
+
+/* Âmes & Crypte */
+.souls { color: #cfc2ff; font-weight: 800; }
+.souls.big { font-size: 26px; }
+.secondary-btn {
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  background: rgba(120, 80, 200, 0.18);
+  border: 2px solid #5a3a8e;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.secondary-btn:active { transform: scale(0.97); }
+#shop { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; }
+.shop-list { flex-shrink: 0; }
+.shop-list .card { cursor: default; padding: 10px 12px; gap: 10px; }
+.shop-list .card-icon { font-size: 28px; }
+.shop-list .card-name { font-size: 15px; }
+.shop-list .card-desc { font-size: 13px; }
+#shop-back { position: sticky; bottom: 0; flex-shrink: 0; }
+.shop-list .card:active, .shop-list .card:hover { transform: none; border-color: #5a2a5e; }
+.shop-list .card > span:nth-child(2) { flex: 1; }
+.price-btn {
+  flex-shrink: 0;
+  min-width: 74px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+  background: linear-gradient(180deg, #8e5ad8, #5a3a8e);
+}
+.price-btn:disabled { opacity: 0.4; }
+.price-btn.maxed { background: none; color: var(--gold); }
+.pips { color: var(--gold); font-size: 11px; letter-spacing: 2px; margin-top: 4px; }
+
 /* Petits écrans (iPhone SE…) */
 @media (max-height: 700px) {
-  .screen { gap: 12px; }
-  .title { font-size: clamp(40px, 12vw, 64px); }
-  .rules { gap: 6px; font-size: 14px; }
-  .rules li { padding: 6px 10px; }
-  .big-btn { padding: 13px 28px; font-size: 20px; }
+  .screen { gap: 10px; }
+  .title { font-size: 44px; }
+  .title span { margin: 0; }
+  .rules { gap: 5px; font-size: 13px; }
+  .rules li { padding: 5px 10px; }
+  .rule-icon { font-size: 18px; }
+  .big-btn { padding: 11px 28px; font-size: 19px; }
+  .secondary-btn { padding: 8px 18px; font-size: 15px; }
 }
