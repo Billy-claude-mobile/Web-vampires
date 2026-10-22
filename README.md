@@ -57,4 +57,6 @@ Les captures sont écrites dans `tests/screenshots/`. Pour utiliser un Chromium 
 
 ## Déploiement
 
-Le workflow `.github/workflows/pages.yml` publie le jeu sur GitHub Pages à chaque push sur `main` (Pages doit être activé avec la source *GitHub Actions* dans *Settings → Pages*).
+Le jeu est publié par GitHub Pages directement depuis la branche `main` (racine du dépôt) : chaque push sur `main` met le site à jour.
+
+👉 https://billy-claude-mobile.github.io/Web-vampires/
