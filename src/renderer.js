@@ -57,6 +57,7 @@ export class Renderer {
     this.#drawGround(game, time);
 
     for (const z of game.zones) z.draw(ctx);
+    for (const h of game.hazards) h.draw(ctx, time);
     for (const h of game.humans) h.drawAim?.(ctx);
     game.boss?.drawTelegraph(ctx, time);
 

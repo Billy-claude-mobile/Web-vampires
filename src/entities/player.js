@@ -15,6 +15,7 @@ export class Player extends Entity {
     this.hurtFlash = 0;
     this.moving = false;
     this.push = { x: 0, y: 0 }; // recul après une morsure de boss
+    this.slowMult = 1; // ralentissement (nuages d'ail)
   }
 
   knockback(dx, dy, power) {
@@ -61,7 +62,7 @@ export class Player extends Entity {
 
   update(dt, game) {
     const dir = game.input.vector;
-    const speed = this.stats.speed * (this.inFrenzy ? CONFIG.frenzy.speedMult : 1);
+    const speed = this.stats.speed * this.slowMult * (this.inFrenzy ? CONFIG.frenzy.speedMult : 1);
     this.moving = this.move(dir.x * speed + this.push.x, dir.y * speed + this.push.y, dt);
     const decay = Math.exp(-dt * 8);
     this.push.x *= decay;

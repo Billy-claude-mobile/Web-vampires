@@ -129,6 +129,14 @@ button {
   white-space: nowrap;
 }
 .hud-souls.bump { animation: bump 0.25s ease-out; }
+.hud-threat {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffb347;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 4px #000;
+  white-space: nowrap;
+}
 
 #score {
   min-width: 70px;
