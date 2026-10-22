@@ -1,0 +1,10 @@
+{
+  "name": "Soif de Sang",
+  "short_name": "Soif de Sang",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0d0812",
+  "theme_color": "#0d0812",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

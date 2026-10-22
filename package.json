@@ -1,0 +1,17 @@
+{
+  "name": "soif-de-sang",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jeu web mobile d'arcade sur le thème des vampires",
+  "type": "module",
+  "scripts": {
+    "start": "http-server -p 8080 -c-1 .",
+    "test": "node tests/smoke.mjs && node tests/balance.mjs",
+    "lint": "eslint src tests"
+  },
+  "devDependencies": {
+    "eslint": "^10.13.0",
+    "http-server": "^14.1.1",
+    "playwright": "^1.64.1"
+  }
+}
