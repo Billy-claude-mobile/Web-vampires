@@ -12,7 +12,7 @@ export const CONFIG = {
   },
 
   // Perte de sang par seconde : base + croissance avec le temps (plafonnée).
-  drain: { base: 3.6, growth: 0.04, max: 20 },
+  drain: { base: 3.6, growth: 0.04, max: 40 },
 
   bite: { comboWindow: 2.4, maxMultiplier: 8 },
 
@@ -36,11 +36,29 @@ export const CONFIG = {
 
   nova: { baseCooldown: 6.5, cooldownStep: 0.9, minCooldown: 3.5, baseRadius: 125, radiusStep: 22 },
 
-  // Population ciblée en fonction du temps écoulé (en secondes).
+  bosses: {
+    firstAt: 70, // secondes avant le premier boss
+    interval: 95, // délai entre la mort d'un boss et l'arrivée du suivant
+    warning: 3,
+    biteDamage: 1,
+    frenzyBiteDamage: 2,
+    biteBlood: 6,
+    batDamage: 0.4,
+    novaDamage: 2,
+    hitCooldown: 0.45,
+    knockback: 320,
+    reward: { blood: 60, score: 500 },
+    holyZone: { radius: 52, delay: 1.1, damage: 24 },
+    grandHunter: { name: 'Le Grand Chasseur', radius: 24, hp: 11, hpPerTier: 7, speed: 115, dashSpeed: 640, dashDamage: 30, rest: 1.3 },
+    grandInquisitor: { name: 'Le Grand Inquisiteur', radius: 24, hp: 14, hpPerTier: 7, speed: 70, rest: 1.2 },
+  },
+
+  // Population par type : effectif ciblé selon le temps (s) et délai minimal entre deux apparitions.
   spawn: {
-    villagers: (t) => Math.min(9 + t * 0.08, 20),
-    hunters: (t) => (t < 18 ? 0 : Math.min(1 + Math.floor((t - 18) / 18), 14)),
-    inquisitors: (t) => (t < 50 ? 0 : Math.min(1 + Math.floor((t - 50) / 30), 8)),
+    // Le village se vide peu à peu après 4 minutes : la fin de partie devient une course.
+    villager: { target: (t) => (t < 240 ? Math.min(9 + t * 0.08, 20) : Math.max(20 - (t - 240) / 25, 6)), interval: 0.45 },
+    hunter: { target: (t) => (t < 18 ? 0 : Math.min(1 + Math.floor((t - 18) / 18), 14)), interval: 1.5 },
+    inquisitor: { target: (t) => (t < 50 ? 0 : Math.min(1 + Math.floor((t - 50) / 30), 8)), interval: 2.5 },
   },
 
   storageKey: 'soif-de-sang',

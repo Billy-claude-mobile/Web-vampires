@@ -70,10 +70,68 @@ await page.evaluate(() => { window.__game.player.blood = 100; });
 await page.waitForTimeout(1500);
 await page.screenshot({ path: `${outDir}/6-late.png` });
 
+// Boss 1 : le Grand Chasseur, capturé pendant le télégraphe de son attaque.
+async function bossShot(index, file) {
+  await page.evaluate((i) => {
+    const g = window.__game;
+    g.boss = null;
+    g.bossesSpawned = i;
+    g.nextBossAt = g.elapsed;
+    g.player.blood = 100;
+    g.player.frenzy = 0;
+  }, index);
+  await page.waitForFunction(() => window.__game.boss?.attack?.telegraph > 0.2, null, { timeout: 15000 });
+  await page.evaluate(() => { window.__game.player.blood = 100; });
+  await page.screenshot({ path: `${outDir}/${file}` });
+  const name = await page.evaluate(() => window.__game.boss.name);
+  console.log('Boss visible :', name);
+}
+// Garde le joueur en vie pendant les captures de boss.
+await page.evaluate(() => { window.__keepAlive = setInterval(() => { window.__game.player.blood = 100; }, 100); });
+await bossShot(0, '6b-boss-hunter.png');
+await bossShot(1, '6c-boss-inquisitor.png');
+await page.waitForFunction(() => window.__game.zones.length > 0, null, { timeout: 15000 });
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${outDir}/6d-holy-zones.png` });
+
+// Le boss perd des PV et donne une montée de niveau à sa mort.
+const bossKill = await page.evaluate(() => {
+  const g = window.__game;
+  g.player.blood = 100;
+  g.boss.hp = 0.5;
+  g.player.x = g.boss.x;
+  g.player.y = g.boss.y;
+  g.boss.hitCooldown = 0;
+  g.boss.attack = null;
+  return true;
+});
+await page.waitForFunction(() => window.__game.bossesKilled === 1, null, { timeout: 5000 });
+console.log('Boss vaincu :', bossKill);
+await page.waitForSelector('#levelup:not(.hidden) .card');
+await page.waitForTimeout(500);
+await page.tap('.card');
+
+await page.evaluate(() => clearInterval(window.__keepAlive));
+
 // Mort par soif : l'écran de fin doit apparaître.
 await page.evaluate(() => { const p = window.__game.player; p.frenzy = 0; p.blood = 0.01; });
 await page.waitForSelector('#gameover:not(.hidden)', { timeout: 3000 });
 await page.screenshot({ path: `${outDir}/7-gameover.png` });
+const souls = await page.evaluate(() => window.__game.soulsEarned);
+console.log('Âmes gagnées :', souls);
+
+// Crypte : achat d'une amélioration permanente.
+await page.evaluate(() => {
+  const data = JSON.parse(localStorage.getItem('soif-de-sang') ?? '{}');
+  localStorage.setItem('soif-de-sang', JSON.stringify({ ...data, souls: 400 }));
+});
+await page.tap('#go-crypt-btn');
+await page.tap('.price-btn');
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${outDir}/8-crypt.png` });
+const bought = await page.evaluate(() => JSON.parse(localStorage.getItem('soif-de-sang')).meta);
+console.log('Achats Crypte :', bought);
+await page.tap('#shop-back');
 
 // Rejouer relance une partie propre.
 await page.tap('#retry-btn');

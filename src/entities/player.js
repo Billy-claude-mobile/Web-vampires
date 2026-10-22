@@ -6,7 +6,7 @@ import { Entity, drawShadow } from './entity.js';
 export class Player extends Entity {
   constructor() {
     super(0, 0, CONFIG.player.radius);
-    this.stats = baseStats(CONFIG.player.speed);
+    this.stats = baseStats(CONFIG.player);
     this.blood = CONFIG.player.startBlood;
     this.invuln = 0;
     this.frenzy = 0;
@@ -14,10 +14,16 @@ export class Player extends Entity {
     this.novaTimer = 0;
     this.hurtFlash = 0;
     this.moving = false;
+    this.push = { x: 0, y: 0 }; // recul après une morsure de boss
+  }
+
+  knockback(dx, dy, power) {
+    this.push.x = dx * power;
+    this.push.y = dy * power;
   }
 
   get maxBlood() {
-    return CONFIG.player.maxBlood;
+    return this.stats.maxBlood;
   }
 
   get inFrenzy() {
@@ -56,7 +62,10 @@ export class Player extends Entity {
   update(dt, game) {
     const dir = game.input.vector;
     const speed = this.stats.speed * (this.inFrenzy ? CONFIG.frenzy.speedMult : 1);
-    this.moving = this.move(dir.x * speed, dir.y * speed, dt);
+    this.moving = this.move(dir.x * speed + this.push.x, dir.y * speed + this.push.y, dt);
+    const decay = Math.exp(-dt * 8);
+    this.push.x *= decay;
+    this.push.y *= decay;
 
     this.invuln = Math.max(0, this.invuln - dt);
     this.frenzy = Math.max(0, this.frenzy - dt);

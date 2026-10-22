@@ -11,7 +11,10 @@ Jeu d'arcade 2D pour mobile (et desktop) sur le thème des vampires. Aucune dép
 - **Inquisiteurs** ✝️ : leur aura dorée brûle. On ne peut les mordre qu'en **frénésie**.
 - **Frénésie** : 8 morsures enchaînées rendent invincible, plus rapide et sans perte de sang pendant quelques secondes.
 - **Montée de niveau** : choisis 1 pouvoir parmi 3 (nuée de chauves-souris, onde sanguine, vitesse, crocs…).
-- Les combos multiplient le score. Le record est sauvegardé localement.
+- **Boss** ☠️ (à 1 min 10, puis toutes les ~1 min 35) : le Grand Chasseur (salves en éventail, charges) et le Grand Inquisiteur (cercles sacrés, renforts). Mords-les entre deux attaques. Chaque victoire rapporte du sang, du score et un pouvoir.
+- **La Crypte** 🏛️ : chaque partie rapporte des âmes 👻 à dépenser en améliorations permanentes (sang max, vitesse, XP, relances, familier, résurrection…).
+- **Musique d'ambiance** générée en direct, plus intense pendant les boss et la frénésie.
+- Les combos multiplient le score. Le record, les âmes et les achats sont sauvegardés localement.
 
 ## Lancer en local
 
@@ -31,10 +34,12 @@ src/config.js              Toutes les valeurs d'équilibrage
 src/game.js                Règles, combats, apparition des ennemis, progression
 src/renderer.js            Rendu canvas (décor procédural, overlays, joystick)
 src/ui.js                  HUD, menus, tutoriel contextuel
-src/upgrades.js            Pouvoirs (pour en ajouter un : un objet dans UPGRADES)
+src/upgrades.js            Pouvoirs de partie (pour en ajouter un : un objet dans UPGRADES)
+src/meta.js                Progression permanente : âmes et Crypte (META_UPGRADES)
+src/music.js               Musique générative (séquenceur Web Audio)
 src/input.js               Joystick tactile et clavier
 src/fx.js / audio.js       Particules et sons synthétisés (Web Audio, aucun fichier)
-src/entities/              Joueur, villageois, chasseurs, inquisiteurs, carreaux
+src/entities/              Joueur, humains, carreaux, boss (bosses.js : ajouter un boss = une classe + BOSS_TYPES)
 tests/                     Tests Playwright : parcours complet, équilibrage par bot, formats d'écran
 ```
 
@@ -44,6 +49,7 @@ Avec le serveur lancé (`npm start`) :
 
 ```bash
 npm test                    # parcours complet sur mobile + équilibrage par bot
+node tests/balance.mjs <url> 10 --meta    # équilibrage avec la moitié de la Crypte achetée
 node tests/sizes.mjs        # captures sur iPhone SE, Pixel 7 et desktop
 ```
 
@@ -51,4 +57,4 @@ Les captures sont écrites dans `tests/screenshots/`. Pour utiliser un Chromium 
 
 ## Déploiement
 
-Le workflow `.github/workflows/pages.yml` publie le jeu sur GitHub Pages à chaque push sur `main`. Il faut l'activer une fois : *Settings → Pages → Source : GitHub Actions*.
+Le workflow `.github/workflows/pages.yml` publie le jeu sur GitHub Pages à chaque push sur `main` (Pages doit être activé avec la source *GitHub Actions* dans *Settings → Pages*).

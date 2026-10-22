@@ -84,8 +84,8 @@ export const UPGRADES = [
 ];
 
 /** Statistiques modifiables du joueur, réinitialisées à chaque partie. */
-export function baseStats(speed) {
-  return { speed, biteRange: 6, bloodGain: 1, drain: 1, armor: 1, bats: 0, nova: 0, frenzyBonus: 0, preySlow: 1 };
+export function baseStats({ speed, maxBlood }) {
+  return { speed, maxBlood, xpGain: 1, biteRange: 6, bloodGain: 1, drain: 1, armor: 1, bats: 0, nova: 0, frenzyBonus: 0, preySlow: 1 };
 }
 
 /** Tire `count` améliorations non maximisées. */
