@@ -48,7 +48,7 @@ tests/                     Tests Playwright : parcours complet, équilibrage par
 Avec le serveur lancé (`npm start`) :
 
 ```bash
-npm test                    # parcours complet sur mobile + équilibrage par bot
+npm test                    # parcours complet, effet de chaque pouvoir, équilibrage par bot
 node tests/balance.mjs <url> 10 --meta    # équilibrage avec la moitié de la Crypte achetée
 node tests/sizes.mjs        # captures sur iPhone SE, Pixel 7 et desktop
 ```
