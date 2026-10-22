@@ -8,7 +8,7 @@ const page = await browser.newPage();
 await page.goto(url);
 
 const results = await page.evaluate(async () => {
-  const { Villager, Hunter, Bolt } = await import('/src/entities/humans.js');
+  const { Villager, Hunter, Inquisitor, Bolt } = await import('/src/entities/humans.js');
   const { CONFIG } = await import('/src/config.js');
   const { META_UPGRADES } = await import('/src/meta.js');
   const game = window.__game;
@@ -181,6 +181,40 @@ const results = await page.evaluate(async () => {
   before = p.blood;
   step(dt);
   check('Nuée sur chasseur', hb.dead && p.blood > before, `+${(p.blood - before).toFixed(1)} sang`);
+
+  // Chauve-souris contre inquisiteur : aucun dégât pour le joueur, l'inquisiteur est repoussé
+  p = fresh({ bats: 1 });
+  const ib = p.batPositions[0];
+  const inq = new Inquisitor(ib.x, ib.y, 0);
+  game.humans.push(inq);
+  const distBefore = Math.hypot(inq.x - p.x, inq.y - p.y);
+  step(dt);
+  const distAfter = Math.hypot(inq.x - p.x, inq.y - p.y);
+  check('Nuée sur inquisiteur', p.blood === 50 && distAfter > distBefore + 20 && inq.stun > 0, `sang=${p.blood}, recul=${(distAfter - distBefore).toFixed(0)} px`);
+
+  // Les crocs n'agrandissent pas la zone où un inquisiteur blesse
+  p = fresh({ fangs: 4 });
+  const near = new Inquisitor(p.x + p.radius + CONFIG.inquisitor.radius + 10, p.y, 0);
+  near.update = () => {};
+  game.humans.push(near);
+  step(dt);
+  check('Crocs : pas de hitbox agrandie', p.blood === 50, `sang=${p.blood} (inquisiteur dans la portée des crocs, hors du corps)`);
+
+  // Une victime de chauve-souris charge la frénésie
+  p = fresh({ bats: 1 });
+  const fv = new Villager(p.batPositions[0].x, p.batPositions[0].y);
+  fv.update = () => {};
+  game.humans.push(fv);
+  step(dt);
+  check('Nuée : charge la frénésie', game.frenzyCharge === 1, `charge=${game.frenzyCharge}/${CONFIG.frenzy.comboStep}`);
+
+  // Une victime de l'onde charge la frénésie
+  p = fresh({ nova: 1 });
+  const fn = new Villager(p.x + 80, p.y);
+  fn.update = () => {};
+  game.humans.push(fn);
+  step(1.1);
+  check('Onde : charge la frénésie', fn.dead && game.frenzyCharge === 1, `charge=${game.frenzyCharge}/${CONFIG.frenzy.comboStep}`);
 
   // Crypte : chaque amélioration permanente appliquée au départ
   for (const u of META_UPGRADES) {

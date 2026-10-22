@@ -11,7 +11,7 @@ export const UPGRADES = [
     name: 'Nuée',
     max: 4,
     desc: (lvl) => (lvl === 0
-      ? 'Une chauve-souris tourne autour de toi, mord les humains et bloque les carreaux'
+      ? 'Une chauve-souris tourne autour de toi : elle mord les humains, bloque les carreaux et repousse les inquisiteurs'
       : '+1 chauve-souris en orbite'),
     apply: (s) => { s.bats += 1; },
   },

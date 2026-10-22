@@ -170,16 +170,14 @@ export class Game {
   #resolveBites() {
     const p = this.player;
     for (const h of this.humans) {
-      if (h.dead || dist(p, h) > p.biteRadius + h.radius) continue;
+      if (h.dead) continue;
+      const d = dist(p, h);
       if (h.canBeBitten(p)) {
-        this.#kill(h, 'bite');
-      } else {
-        // Contact avec un inquisiteur : dégâts + repousse.
+        if (d <= p.biteRadius + h.radius) this.#kill(h, 'bite');
+      } else if (d <= p.radius + h.radius) {
+        // Contact avec un inquisiteur : dégâts + repousse. Seul le corps compte, pas la portée des crocs.
         this.#hurt(h.cfg.contactDamage, 'Purifié par un inquisiteur');
-        const d = dirTo(p, h);
-        h.x += d.x * 40;
-        h.y += d.y * 40;
-        h.stun = 0.8;
+        this.#repel(h, 40, 0.8);
       }
     }
   }
@@ -190,7 +188,14 @@ export class Game {
     const reach = CONFIG.bats.radius;
     for (const bat of p.batPositions) {
       for (const h of this.humans) {
-        if (!h.dead && !h.holy && dist(bat, h) < reach + h.radius) this.#kill(h, 'bat');
+        if (h.dead || dist(bat, h) >= reach + h.radius) continue;
+        if (h.canBeBitten(p)) {
+          this.#kill(h, 'bat');
+        } else if (!(h.stun > 0)) {
+          // Les chauves-souris ne peuvent pas mordre un inquisiteur, mais elles le repoussent.
+          this.#repel(h, CONFIG.bats.repel, CONFIG.bats.stun);
+          this.fx.sparks(h.x, h.y - h.radius, '#ffd34d', 6);
+        }
       }
       for (const b of this.bolts) {
         if (!b.dead && dist(bat, b) < reach + 8) {
@@ -216,14 +221,19 @@ export class Game {
     for (const h of this.humans) {
       if (h.dead || dist(p, h) > radius + h.radius) continue;
       if (h.holy) {
-        const d = dirTo(p, h);
-        h.x += d.x * 60;
-        h.y += d.y * 60;
-        h.stun = 1.2;
+        this.#repel(h, 60, 1.2);
       } else {
         this.#kill(h, 'nova');
       }
     }
+  }
+
+  /** Repousse un humain loin du joueur et l'étourdit. */
+  #repel(h, distance, stun) {
+    const d = dirTo(this.player, h);
+    h.x += d.x * distance;
+    h.y += d.y * distance;
+    h.stun = stun;
   }
 
   #resolveBolts() {
@@ -367,8 +377,8 @@ export class Game {
     this.audio.bite(this.combo);
     if (source === 'bite') this.fx.shake(2, 0.08);
 
-    // La frénésie se charge par morsures directes hors frénésie : elle ne peut pas s'enchaîner.
-    if (!p.inFrenzy && source === 'bite') {
+    // Toute victime charge la frénésie, mais seulement hors frénésie : elle ne peut pas s'enchaîner.
+    if (!p.inFrenzy) {
       this.frenzyCharge += 1;
       if (this.frenzyCharge >= CONFIG.frenzy.comboStep) this.#startFrenzy();
     }
