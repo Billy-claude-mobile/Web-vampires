@@ -46,6 +46,16 @@ const state = await page.evaluate(() => {
 console.log('État après 4s de jeu :', state);
 await page.screenshot({ path: `${outDir}/4-after.png` });
 
+// Compteur d'âmes du HUD : doit refléter les âmes accumulées dans la partie.
+await page.evaluate(() => { window.__game.elapsed += 40; });
+await page.waitForTimeout(200);
+const soulsHud = await page.evaluate(() => ({ hud: Number(document.getElementById('hud-souls-count').textContent), game: window.__game.souls }));
+console.log('Âmes HUD :', soulsHud);
+if (soulsHud.hud !== soulsHud.game || soulsHud.game <= 0) {
+  console.error('Compteur d\'âmes incorrect');
+  process.exitCode = 1;
+}
+
 // Montée de niveau forcée : les cartes doivent s'afficher puis être cliquables.
 await page.evaluate(() => { window.__game.pendingLevelUps = 1; });
 await page.waitForSelector('#levelup:not(.hidden) .card');
@@ -117,8 +127,12 @@ await page.evaluate(() => clearInterval(window.__keepAlive));
 await page.evaluate(() => { const p = window.__game.player; p.frenzy = 0; p.blood = 0.01; });
 await page.waitForSelector('#gameover:not(.hidden)', { timeout: 3000 });
 await page.screenshot({ path: `${outDir}/7-gameover.png` });
-const souls = await page.evaluate(() => window.__game.soulsEarned);
+const souls = await page.evaluate(() => ({ gagnées: window.__game.soulsEarned, hud: Number(document.getElementById('hud-souls-count').textContent), écranFin: Number(document.getElementById('go-souls').textContent) }));
 console.log('Âmes gagnées :', souls);
+if (souls.gagnées !== souls.hud || souls.gagnées !== souls.écranFin) {
+  console.error('Âmes du HUD et de fin de partie différentes');
+  process.exitCode = 1;
+}
 
 // Crypte : achat d'une amélioration permanente.
 await page.evaluate(() => {

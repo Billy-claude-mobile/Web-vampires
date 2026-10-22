@@ -115,6 +115,11 @@ export class Game {
     return Math.min(1 + Math.floor(this.combo / 4), CONFIG.bite.maxMultiplier);
   }
 
+  /** Âmes accumulées jusqu'ici dans la partie (créditées à la fin). */
+  get souls() {
+    return soulsForRun(this, this.run.soulGain);
+  }
+
   get viewRadius() {
     return Math.hypot(this.view.hw, this.view.hh);
   }
@@ -419,7 +424,7 @@ export class Game {
     this.input.enabled = false;
     this.input.reset();
     this.audio.death();
-    this.soulsEarned = soulsForRun(this, this.run.soulGain);
+    this.soulsEarned = this.souls;
     meta.addSouls(this.soulsEarned);
     this.ui.showGameOver(this);
   }
