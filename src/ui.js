@@ -24,8 +24,11 @@ export class UI {
       bossBar: $('boss-bar'),
       bossName: $('boss-name'),
       bossFill: $('boss-fill'),
+      souls: $('hud-souls'),
+      soulsCount: $('hud-souls-count'),
     };
     this.lastCombo = 0;
+    this.lastSouls = 0;
     this.hintTimer = 0;
     this.tutorialStep = 0;
   }
@@ -63,6 +66,8 @@ export class UI {
   startRun() {
     this.tutorialStep = 0;
     this.lastCombo = 0;
+    this.lastSouls = 0;
+    this.el.soulsCount.textContent = 0;
     this.hintTimer = 0;
     this.showHud();
   }
@@ -175,6 +180,15 @@ export class UI {
     el.xpFill.style.transform = `scaleX(${game.xp / game.xpNeeded})`;
     el.level.textContent = `Niv. ${game.level}`;
     el.score.textContent = game.score;
+
+    const souls = game.souls;
+    if (souls !== this.lastSouls) {
+      el.soulsCount.textContent = souls;
+      el.souls.classList.remove('bump');
+      void el.souls.offsetWidth; // relance l'animation
+      el.souls.classList.add('bump');
+      this.lastSouls = souls;
+    }
 
     const boss = game.boss;
     el.bossBar.classList.toggle('hidden', !boss);
