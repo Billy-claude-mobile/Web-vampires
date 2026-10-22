@@ -33,7 +33,8 @@ export const CONFIG = {
   inquisitor: { radius: 16, speed: 105, speedGrowth: 0.25, contactDamage: 24, blood: 40, xp: 6, score: 80 },
 
   // bloodFactor : part du sang d'une morsure rendue par une victime de ce pouvoir.
-  bats: { orbitRadius: 62, angularSpeed: 3.2, radius: 9, bloodFactor: 0.8 },
+  // repel / stun : recul et étourdissement infligés aux inquisiteurs touchés par une chauve-souris.
+  bats: { orbitRadius: 62, angularSpeed: 3.2, radius: 9, bloodFactor: 0.8, repel: 45, stun: 0.9 },
 
   nova: { bloodFactor: 0.8, baseCooldown: 6.5, cooldownStep: 0.9, minCooldown: 3.5, baseRadius: 125, radiusStep: 22 },
 
